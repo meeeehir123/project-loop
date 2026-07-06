@@ -17,7 +17,7 @@ export async function POST(req: Request) {
 
     const lastMessage = messages[messages.length - 1].content;
     const model = genAI.getGenerativeModel({ 
-  model: "gemini-3-flash-preview",
+  model: "gemini-1.5-flash",
   systemInstruction: `
     Tum 'Project LOOP' ke official AI Assistant ho.
     PROJECT SUMMARY: Project LOOP ek advanced Customer-Feedback Intelligence platform hai. 
