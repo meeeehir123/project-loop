@@ -33,8 +33,11 @@ export async function getSentiment(text: string): Promise<string> {
 
   // --- LAYER 2: FALLBACK (NEVER FAILS) ---
   const msg = text.toLowerCase();
-  const pos = ["good", "great", "excellent", "awesome", "nice", "love", "happy"];
-  const neg = ["bad", "worst", "hate", "poor", "terrible"];
+  const pos = ["good", "great", "excellent", "awesome", "nice", "love", "happy", "charming", 
+    "wonderful", "delighted", "fantastic", "amazing", "beautiful", "perfect", "lovely"
+  ];
+  const neg = ["bad", "worst", "hate", "poor", "terrible", "disappointed", "issue", "problem", 
+    "sad", "awful", "ugly", "horrible", "difficult", "unhappy", "frustrated"];
 
   let score = 0;
   pos.forEach(w => msg.includes(w) ? score++ : 0);
