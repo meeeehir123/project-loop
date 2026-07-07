@@ -1,30 +1,25 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-
-export async function GET() {
-  try {
-    const feedback = await prisma.feedback.findMany({
-      orderBy: { id: "desc" },
-    });
-    return NextResponse.json(feedback);
-  } catch (error) {
-    return NextResponse.json({ message: "Error" }, { status: 500 });
-  }
-}
+import { getSentiment } from "@/lib/sentiment"; // Make sure path is correct
 
 export async function POST(request: Request) {
   try {
-    const { customerName, email, category, feedback, rating } = await request.json();
+    const body = await request.json();
+    const { customerName, email, category, feedback, rating } = body;
     
-    // AI ko yahan se hata diya hai taaki error na aaye
-    const detectedSentiment = "Neutral"; 
+    console.log("DEBUG: Received Feedback:", feedback);
+
+    // Call the sentiment function
+    const detectedSentiment = await getSentiment(feedback);
+    
+    console.log("DEBUG: Calculated Sentiment:", detectedSentiment);
 
     const newFeedback = await prisma.feedback.create({
       data: {
-        customerName: customerName || "Anonymous Node",
-        email: email || "anonymous@loop.os",
+        customerName: customerName || "Anonymous",
+        email: email || "a@b.com",
         feedback: feedback,
-        sentiment: detectedSentiment,
+        sentiment: detectedSentiment, // Ye wahi result hai jo function dega
         category: category || "General",
         rating: rating || 5,
       },
@@ -32,7 +27,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(newFeedback);
   } catch (error) {
-    console.error("Submission Error:", error);
+    console.error("CRITICAL ERROR:", error);
     return NextResponse.json({ message: "Submission failed" }, { status: 500 });
   }
 }
