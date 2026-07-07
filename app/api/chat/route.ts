@@ -1,23 +1,24 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import OpenAI from 'openai';
+
+// OpenAI client initialize karna
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY, // Yeh tumhare .env se key uthayega
+});
 
 export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
     const lastMessage = messages[messages.length - 1].content;
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error("API Key is missing in environment variables");
-    }
+    // OpenAI se chat completion mangna
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini", // Yeh model fast aur cheap hai
+      messages: [{ role: "user", content: lastMessage }],
+    });
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ 
-  model: "gemini-1.5-flash-002" 
-}, { apiVersion: 'v1' });
-    
-    const result = await model.generateContent(lastMessage);
-    const response = await result.response.text();
+    // OpenAI se response lena
+    const response = completion.choices[0].message.content;
 
     return NextResponse.json({ message: response });
   } catch (error: any) {
