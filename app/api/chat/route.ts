@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
-import OpenAI from 'openai';
+import { Groq } from 'groq-sdk'; // Pehle npm install groq-sdk karo
 
-// OpenAI client initialize karna
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY, // Yeh tumhare .env se key uthayega
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY,
 });
 
 export async function POST(req: Request) {
@@ -11,18 +10,16 @@ export async function POST(req: Request) {
     const { messages } = await req.json();
     const lastMessage = messages[messages.length - 1].content;
 
-    // OpenAI se chat completion mangna
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini", // Yeh model fast aur cheap hai
+    const completion = await groq.chat.completions.create({
       messages: [{ role: "user", content: lastMessage }],
+      model: "llama3-8b-8192", // Groq ka free model
     });
 
-    // OpenAI se response lena
-    const response = completion.choices[0].message.content;
+    const response = completion.choices[0]?.message?.content;
 
     return NextResponse.json({ message: response });
   } catch (error: any) {
-    console.error("DEBUG AI ERROR:", error);
+    console.error("GROQ AI ERROR:", error);
     return NextResponse.json(
       { message: "AI Error: " + (error.message || "Unknown error") }, 
       { status: 500 }
