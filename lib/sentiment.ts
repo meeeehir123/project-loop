@@ -2,13 +2,28 @@
 export async function getSentiment(text: string): Promise<string> {
   if (!text || text.trim() === "") return "Neutral";
 
-  // --- LAYER 1: AI (ONLY IF ENVIRONMENT ALLOWS) ---
-  // Vercel serverless functions mein AI model ka heavy loading error deta hai
-  // isliye hum ise 'soft-try' mein rakh rahe hain.
+  // --- LAYER 0: GOOGLE GEMINI API (FAST & ACCURATE) ---
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: `Analyze sentiment of this feedback: "${text}". Answer ONLY with one word: Positive, Negative, or Neutral.` }] }]
+        }),
+      }
+    );
+    const data = await response.json();
+    const geminiResult = data.candidates[0].content.parts[0].text.trim();
+    if (["Positive", "Negative", "Neutral"].includes(geminiResult)) return geminiResult;
+  } catch (apiErr) {
+    console.log("Gemini API skipped, moving to AI model...");
+  }
+
+  // --- LAYER 1: AI (TRANSFORMERS.JS) ---
   try {
     const { pipeline, env } = await import("@xenova/transformers");
-    
-    // Performance optimization for Vercel
     env.allowLocalModels = false;
     env.useBrowserCache = true;
 
@@ -25,9 +40,6 @@ export async function getSentiment(text: string): Promise<string> {
       return aiLabel === "POSITIVE" ? "Positive" : "Negative";
     }
   } catch (err) {
-    // Agar model load hone mein 1 second se zyada le, 
-    // ya memory overflow ho, toh ye code catch block mein aa jayega
-    // aur crash nahi hoga.
     console.log("AI bypassed due to resource limits.");
   }
 
