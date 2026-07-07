@@ -6,7 +6,7 @@ export async function POST(req: Request) {
     const { messages } = await req.json();
     const lastMessage = messages[messages.length - 1].content;
 
-    const apiKey = "AQ.Ab8RN6JhkyrZtxavROJ0iiuvJEBVOLBKjjJbaHWx0o9vNSkzxQ";
+    const apiKey = "process.env.GEMINI_API_KEY";
     if (!apiKey) {
       return NextResponse.json({ message: "API Key nahi mili!" }, { status: 500 });
     }
