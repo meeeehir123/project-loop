@@ -1,9 +1,11 @@
 // @ts-nocheck
+import ExportButton from "@/components/export-button";
 import SearchFilter from "@/components/searchfilter";
 import FeedbackList from "@/components/feedbacklist";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 // SERVER ACTION: Purge Logic
 async function purgeNegativeFeedback() {
@@ -56,6 +58,12 @@ const positiveCount = feedbacks.filter((item) => normalize(item.sentiment) === "
 const neutralCount = feedbacks.filter((item) => normalize(item.sentiment) === "neutral" || normalize(item.category) === "neutral").length;
 const negativeCount = feedbacks.filter((item) => normalize(item.sentiment) === "negative" || normalize(item.category) === "negative").length;
 
+const data = [
+  { name: 'POS', value: positiveCount, color: '#10b981' },
+  { name: 'NEU', value: neutralCount, color: '#f59e0b' },
+  { name: 'NEG', value: negativeCount, color: '#f43f5e' },
+];
+
 const NEGATIVE_THRESHOLD = 5;
 const isCritical = negativeCount >= NEGATIVE_THRESHOLD;
 
@@ -65,10 +73,6 @@ const neuDeg = (neutralCount / total) * 360;
 const posPct = Math.round((positiveCount / total) * 100);
 const neuPct = Math.round((neutralCount / total) * 100);
 const negPct = Math.round((negativeCount / total) * 100);
-const maxCount = Math.max(positiveCount, neutralCount, negativeCount) || 1;
-const posBarHeight = Math.round((positiveCount / maxCount) * 140);
-const neuBarHeight = Math.round((neutralCount / maxCount) * 140);
-const negBarHeight = Math.round((negativeCount / maxCount) * 140);
 
 return (
 <div className="min-h-screen bg-[#09090b] text-zinc-100 flex font-sans antialiased overflow-x-hidden selection:bg-zinc-800 selection:text-white">
@@ -113,7 +117,6 @@ Exit Terminal
 <main className="flex-1 relative p-6 md:p-10 flex flex-col space-y-8 overflow-y-auto w-full z-10">
 <div className="absolute inset-0 z-0 opacity-[0.08] mix-blend-screen pointer-events-none" style={{ backgroundImage: `linear-gradient(to right, rgba(255, 255, 255, 0.1) 1px, transparent 1px), linear-gradient(to bottom, rgba(255, 255, 255, 0.1) 1px, transparent 1px)`, backgroundSize: '40px 40px' }} />
 <div className="relative z-10 space-y-8 w-full max-w-7xl mx-auto">
-{/* PURGE BUTTON LINKED HERE */}
 {isCritical && (
 <div className="w-full bg-rose-950/20 border border-rose-900/50 rounded-xl p-4 flex items-center justify-between animate-in fade-in slide-in-from-top-4 shadow-xl">
 <div className="flex items-center gap-3 text-rose-400">
@@ -131,7 +134,6 @@ Initiate Purge
 </div>
 )}
 
-{/* ... Rest of your UI code remains exactly same ... */}
 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 pb-6 border-b border-zinc-800">
 <div>
 <div className="flex items-center gap-2 mb-1.5">
@@ -204,13 +206,19 @@ Initiate Purge
 
 <div className="bg-zinc-900/80 backdrop-blur-md border border-zinc-800 rounded-2xl p-6 shadow-2xl flex flex-col justify-between">
 <div className="w-full text-left mb-4"><span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">VISUAL.FREQUENCY_BARS</span><h2 className="text-sm font-medium text-zinc-300 mt-0.5">Magnitude Graph</h2></div>
-<div className="flex items-end justify-around h-44 w-full bg-zinc-950/60 border border-zinc-800 rounded-xl p-4 relative">
-<div className="absolute inset-x-0 top-1/4 border-t border-zinc-900/40" /><div className="absolute inset-x-0 top-2/4 border-t border-zinc-900/40" /><div className="absolute inset-x-0 top-3/4 border-t border-zinc-900/40" />
-<div className="flex flex-col items-center gap-2 w-full max-w-[32px] z-10"><div className="text-[10px] font-mono text-emerald-400">{positiveCount}</div><div className="w-full bg-gradient-to-t from-emerald-600 to-emerald-400 rounded-t-md" style={{ height: `${feedbacks.length > 0 ? posBarHeight : 4}px` }} /></div>
-<div className="flex flex-col items-center gap-2 w-full max-w-[32px] z-10"><div className="text-[10px] font-mono text-amber-400">{neutralCount}</div><div className="w-full bg-gradient-to-t from-amber-600 to-amber-400 rounded-t-md" style={{ height: `${feedbacks.length > 0 ? neuBarHeight : 4}px` }} /></div>
-<div className="flex flex-col items-center gap-2 w-full max-w-[32px] z-10"><div className="text-[10px] font-mono text-rose-400">{negativeCount}</div><div className="w-full bg-gradient-to-t from-rose-600 to-rose-400 rounded-t-md" style={{ height: `${feedbacks.length > 0 ? negBarHeight : 4}px` }} /></div>
+<div className="h-44 w-full">
+  <ResponsiveContainer width="100%" height="100%">
+    <BarChart data={data}>
+      <XAxis dataKey="name" tick={{fontSize: 10, fill: '#71717a'}} axisLine={false} tickLine={false} />
+      <Tooltip cursor={{fill: 'transparent'}} contentStyle={{backgroundColor: '#18181b', border: '1px solid #27272a', borderRadius: '8px'}} />
+      <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+        {data.map((entry, index) => (
+          <Cell key={`cell-${index}`} fill={entry.color} />
+        ))}
+      </Bar>
+    </BarChart>
+  </ResponsiveContainer>
 </div>
-<div className="grid grid-cols-3 text-center text-[10px] font-mono text-zinc-500 pt-3 border-t border-zinc-800 mt-4"><span>POS</span><span>NEU</span><span>NEG</span></div>
 </div>
 </div>
 

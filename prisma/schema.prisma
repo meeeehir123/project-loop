@@ -7,23 +7,37 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        Int      @id @default(autoincrement())
+// 1. Workspace model (Multi-tenancy ke liye)
+model Workspace {
+  id        String     @id @default(uuid())
   name      String
-  email     String   @unique
-  phone String? @unique
-  password  String
-  role      String   @default("customer")
-  createdAt DateTime @default(now())
+  users     User[]
+  feedbacks Feedback[]
+  createdAt DateTime   @default(now())
 }
 
+// 2. Updated User model
+model User {
+  id          String    @id @default(uuid()) // uuid use karna behtar hai
+  name        String
+  email       String    @unique
+  password    String
+  role        String    @default("VIEWER") // ADMIN, ANALYST, VIEWER
+  workspaceId String?
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id])
+  createdAt   DateTime   @default(now())
+}
+
+// 3. Updated Feedback model
 model Feedback {
-  id           Int      @id @default(autoincrement())
+  id          String   @id @default(uuid())
   customerName String
   email        String
   category     String
   feedback     String
   sentiment    String   @default("Neutral")
-  rating Int @default(5)
+  rating       Int      @default(5)
+  workspaceId  String   // Har feedback ek specific workspace ka hoga
+  workspace    Workspace @relation(fields: [workspaceId], references: [id])
   createdAt    DateTime @default(now())
 }
