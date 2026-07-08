@@ -10,7 +10,7 @@ export async function DELETE(
 
     await prisma.feedback.delete({
       where: {
-        id: Number(id),
+        id: String(id),
       },
     });
 
@@ -38,7 +38,7 @@ export async function PUT(
 
     const updatedFeedback = await prisma.feedback.update({
       where: {
-        id: Number(id),
+        id: String(id),
       },
       data: {
         customerName,

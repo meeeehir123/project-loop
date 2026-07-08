@@ -23,6 +23,7 @@ export default function FeedbackPage() {
           category,
           feedback,
           rating,
+          workspaceId:"abc1234"
         }),
       });
 

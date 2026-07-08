@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getSentiment } from "@/lib/sentiment"; // Make sure path is correct
+import { getSentiment } from "@/lib/sentiment";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { customerName, email, category, feedback, rating } = body;
+    const { customerName, email, category, feedback, rating, workspaceId } = body;
     
     console.log("DEBUG: Received Feedback:", feedback);
 
@@ -14,14 +14,20 @@ export async function POST(request: Request) {
     
     console.log("DEBUG: Calculated Sentiment:", detectedSentiment);
 
+    // Agar workspaceId missing hai toh error bhej do, nahi toh create karo
+    if (!workspaceId) {
+      return NextResponse.json({ message: "Workspace ID is required" }, { status: 400 });
+    }
+
     const newFeedback = await prisma.feedback.create({
       data: {
         customerName: customerName || "Anonymous",
         email: email || "a@b.com",
         feedback: feedback,
-        sentiment: detectedSentiment, // Ye wahi result hai jo function dega
+        sentiment: detectedSentiment || "Neutral", 
         category: category || "General",
-        rating: rating || 5,
+        rating: Number(rating) || 5,
+        workspaceId: workspaceId,
       },
     });
 
